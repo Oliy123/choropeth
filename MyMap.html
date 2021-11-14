@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <script type="text/javascript"src="Census tracts in Pierce County.js">
+
+  </script>
+
+  <style>
+    #map{ position: absolute;top: 0;bottom: 0; left: 0;right: 0;}
+    info {
+    padding: 6px 8px;
+    font: 14px/16px Arial, Helvetica, sans-serif;
+    background: white;
+    background: rgba(255,255,255,0.8);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+}
+.info h4 {
+    margin: 0 0 5px;
+    color: #777;
+}
+
+.legend {
+    line-height: 18px;
+    color: #555;
+}
+.legend i {
+    width: 18px;
+    height: 18px;
+    float: left;
+    margin-right: 8px;
+    opacity: 0.7;
+}
+  </style>
+
+</head>
+<body>
+<div id="map"></div>
+<script>
+
+  var map = L.map('map').setView([47.062763, -122.215005], 9.4);
+  var osm = L.tileLayer('https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=x3NbOi9ahs4cFNNTdeRO',{
+    attribution:'<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>'
+  });//osm.addTo(map);
+
+
+  //water color
+  var Watercolor = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.{ext}', {
+	attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+	subdomains: 'abcd',
+	minZoom: 1,
+	maxZoom: 12,
+	ext: 'jpg'
+});//Watercolor.addTo(map);
+
+//daarkmap
+var Dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
+	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+	subdomains: 'abcd',
+	maxZoom: 12
+});//Dark.addTo(map);
+
+//google street
+
+googleStreets = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{
+    maxZoom: 12,
+    subdomains:['mt0','mt1','mt2','mt3']
+});//googleStreets.addTo(map);
+
+
+//google hybrid
+
+googleHybrid = L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}',{
+    maxZoom: 12,
+    subdomains:['mt0','mt1','mt2','mt3']
+});//googleHybrid.addTo(map);
+
+//google sat
+googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{
+    maxZoom: 12,
+    subdomains:['mt0','mt1','mt2','mt3']
+});//googleSat.addTo(map);
+
+
+//layercontroller
+          var baseMaps = {
+              "osm": osm,
+              "Watercolor": Watercolor,
+              "Dark": Dark,
+              "Hybrid": googleHybrid,
+              "Sat": googleSat
+
+          };
+
+
+          L.control.layers(baseMaps, null, {collapsed : true}).addTo(map);
+
+//adding choreplet
+ L.geoJson(pierceCounty).addTo(map);
+//Adding Some Color
+function getColor(d) {
+    return d > 50 ? '#f7f4f9' :
+           d > 25  ? '#e7e1ef' :
+           d > 20 ? '#d4b9da' :
+           d > 16  ? '#c994c7' :
+           d > 12   ? '#df65b0' :
+           d > 8   ? '#e7298a' :
+           d > 4   ? '#ce1256' :
+                      '#91003f';
+}
+function style(feature) {
+    return {
+        fillColor: getColor(feature.properties.Vac_rate),
+        weight: 2,
+        opacity: 1,
+        color: 'white',
+        dashArray: '3',
+        fillOpacity: 0.7
+    };
+}
+
+var overlays = L.geoJson(pierceCounty, {style: style}).addTo(map);
+
+//Adding Interaction
+
+function highlightFeature(e) {
+    var layer = e.target;
+
+    layer.setStyle({
+        weight: 5,
+        color: '#666',
+        dashArray: '',
+        fillOpacity: 0.7
+    });
+
+    if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+        layer.bringToFront();
+    }
+
+    info.update(layer.feature.properties);
+}
+function resetHighlight(e) {
+    geojson.resetStyle(e.target);
+    info.update();
+}
+var geojson;
+// ... our listeners
+geojson = L.geoJson(pierceCounty);
+
+function zoomToFeature(e) {
+    map.fitBounds(e.target.getBounds());
+}
+
+function onEachFeature(feature, layer) {
+    layer.on({
+        mouseover: highlightFeature,
+        mouseout: resetHighlight,
+        click: zoomToFeature
+    });
+}
+
+geojson = L.geoJson(pierceCounty, {
+    style: style,
+    onEachFeature: onEachFeature
+}).addTo(map);
+
+var info = L.control();
+
+info.onAdd = function (map) {
+    this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
+    this.update();
+    return this._div;
+};
+
+// method that we will use to update the control based on feature properties passed
+info.update = function (props) {
+    this._div.innerHTML = '<h4>housing vacancy rate / Pierce County</h4>' +  (props ?
+        '<b>'  + '</b><br />' + props.Vac_rate + ' housing vacancy rate '
+        : 'Hover over Pierce county');
+};
+
+info.addTo(map);
+
+
+var legend = L.control({position: 'bottomright'});
+
+legend.onAdd = function (map) {
+
+    var div = L.DomUtil.create('div', 'info legend'),
+        grades = [4, 8, 12, 16, 20, 25, 50, 75],
+        labels = [];
+
+    // loop through our vac rate intervals and generate a label with a colored square for each interval
+    for (var i = 0; i < grades.length; i++) {
+        div.innerHTML +=
+            '<i style="background:' + getColor(grades[i] + 1) + '"></i> ' +
+            grades[i] + (grades[i + 1] ? '&ndash;' + grades[i + 1] + '<br>' : '+');
+    }
+
+    return div;
+};
+
+legend.addTo(map);
+
+L.control.layers(baseMaps, overlays, {collapsed : true}).addTo(map);
+
+
+</script>
+</body>
+</html>
