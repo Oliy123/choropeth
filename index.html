@@ -198,7 +198,7 @@ ul li a:hover{
 
   var map = L.map('map',{
   MaxBounds:[[47.454605, -122.998210],[46.729326, -121.273173]],
-  minZoom:9.25
+  minZoom:9.25,
 }).setView([47.062763, -122.215005], 9);
   var osm = L.tileLayer('https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=x3NbOi9ahs4cFNNTdeRO',{
     attribution:'<a href="https://www.maptiler.com/copyright/" target="_blank">&copy; MapTiler</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>'
@@ -209,7 +209,7 @@ ul li a:hover{
   var Watercolor = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/watercolor/{z}/{x}/{y}.{ext}', {
 	attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 	subdomains: 'abcd',
-	minZoom: 1,
+	
 	maxZoom: 12,
 	ext: 'jpg'
 });//Watercolor.addTo(map);
@@ -336,7 +336,7 @@ info.onAdd = function (map) {
 // method that we will use to update the control based on feature properties passed
 info.update = function (props) {
     this._div.innerHTML = '<h4>housing vacancy rate / Pierce County</h4>' +  (props ?
-        '<b>'  + '</b><br />' + props.Vac_rate + ' housing vacancy rate '
+        '<b>'  + '</b><br />' + Math.round(props.Vac_rate) + '% housing vacancy rate '
         : 'Hover over Pierce county');
 };
 
